@@ -1,0 +1,68 @@
+#include <DHT.h>    // Library for the DHT sensor
+
+// Define pins
+#define PIR_PIN 2        // PIR sensor input pin
+#define RELAY_PIN 3      // Relay pin (for lights or appliances)
+#define DHT_PIN 4        // DHT sensor input pin
+#define LED_PIN 5        // LED pin
+#define BUZZER_PIN 6     // Buzzer pin for security alert
+#define DHT_TYPE DHT11   // Define the type of DHT sensor (DHT11 or DHT22)
+
+DHT dht(DHT_PIN, DHT_TYPE);  // Initialize DHT sensor
+
+void setup() {
+  pinMode(PIR_PIN, INPUT);   // Set PIR sensor as input
+  pinMode(RELAY_PIN, OUTPUT);  // Set Relay as output
+  pinMode(LED_PIN, OUTPUT);    // Set LED as output
+  pinMode(BUZZER_PIN, OUTPUT); // Set Buzzer as output
+  Serial.begin(9600);  // Initialize Serial communication
+  
+  dht.begin();         // Initialize DHT sensor
+  Serial.println("Smart Home System Initialized");
+}
+
+void loop() {
+  // Read PIR sensor for motion detection
+  int pirState = digitalRead(PIR_PIN);
+  
+  if (pirState == HIGH) {  // Motion detected
+    Serial.println("Motion detected! Turning on the light...");
+    digitalWrite(RELAY_PIN, HIGH);   // Turn on light (via relay)
+    digitalWrite(LED_PIN, HIGH);     // Turn on LED
+    digitalWrite(BUZZER_PIN, HIGH);  // Turn on buzzer (security alert)
+  } else {
+    digitalWrite(RELAY_PIN, LOW);    // Turn off light
+    digitalWrite(LED_PIN, LOW);      // Turn off LED
+    digitalWrite(BUZZER_PIN, LOW);   // Turn off buzzer
+  }
+
+  // Read temperature and humidity from DHT sensor
+  float temperature = dht.readTemperature();
+  float humidity = dht.readHumidity();
+  
+  // Check if any readings failed and exit early
+  if (isnan(temperature) || isnan(humidity)) {
+    Serial.println("Failed to read from DHT sensor!");
+    return;
+  }
+
+  // Print temperature and humidity to Serial Monitor
+  Serial.print("Temperature: ");
+  Serial.print(temperature);
+  Serial.println(" °C");
+  
+  Serial.print("Humidity: ");
+  Serial.print(humidity);
+  Serial.println(" %");
+
+  // Add temperature control logic (e.g., trigger appliances or fans)
+  if (temperature > 25.0) {
+    Serial.println("Temperature is high! Turning on fan...");
+    digitalWrite(RELAY_PIN, HIGH);  // Turn on relay (fan)
+  } else {
+    Serial.println("Temperature is normal.");
+    digitalWrite(RELAY_PIN, LOW);  // Turn off relay
+  }
+
+  delay(2000);  // Wait for 2 seconds before next loop
+}
